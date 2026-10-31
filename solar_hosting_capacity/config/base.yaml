@@ -1,0 +1,26 @@
+run_name: base
+seed: 42 
+
+feeder:
+  n_houses: 30
+  backbone_length_m: 400
+  segment_length_m: 20
+  service_length_m: 20
+  backbone_line_type: "NAVY 4x150 SE"
+  service_line_type: "NAYY 4x50 SE"
+  trafo_type: "0.4 MVA 20/0.4 kV"     # check with pp.available_std_types(net, "trafo")
+  source_vm_pu: 1.03                  # upstream voltage; tune so the street start sits where you want
+  lv_vn_kv: 0.398                     # 230 V phase × √3, so 1.0 pu = 230 V
+
+loads:
+  evening_kw: 1.8
+  midday_kw: 0.4
+  power_factor: 0.95
+
+solar:
+  inverter_kva: 5.0
+  penetration_levels: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  runs_per_level: 100
+
+inverter:
+  mode: unity   # unity | volt_var | volt_watt | vv_vw
