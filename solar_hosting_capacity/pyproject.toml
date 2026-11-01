@@ -10,6 +10,11 @@ dependencies = [
     "numpy>=2.4.6",
     "pandapower>=3.5.6",
     "pandas>=2.3.3",
+    "pytest>=9.2.0",
     "pyyaml>=6.0.3",
     "tqdm>=4.70.1",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

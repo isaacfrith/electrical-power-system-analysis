@@ -6,7 +6,7 @@ feeder:
   backbone_length_m: 400
   segment_length_m: 20
   service_length_m: 20
-  backbone_line_type: "NAVY 4x150 SE"
+  backbone_line_type: "NAYY 4x150 SE"
   service_line_type: "NAYY 4x50 SE"
   trafo_type: "0.4 MVA 20/0.4 kV"     # check with pp.available_std_types(net, "trafo")
   source_vm_pu: 1.03                  # upstream voltage; tune so the street start sits where you want

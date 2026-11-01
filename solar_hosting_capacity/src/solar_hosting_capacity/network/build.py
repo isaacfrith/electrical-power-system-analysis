@@ -1,7 +1,9 @@
-import pandapower as pp 
-import math
-from types import SimpleNamespace
+import pandapower as pp
 from dataclasses import dataclass
+from solar_hosting_capacity.constants import kw_to_mw, q_from_pf 
+
+from solar_hosting_capacity.config import Config
+from solar_hosting_capacity.constants import kw_to_mw, q_from_pf
 
 @dataclass
 class Feeder:
@@ -9,7 +11,7 @@ class Feeder:
     house_buses: list[int]        # pandapower bus index of each house, in order along the street
     dist_m: dict[int, float] 
 
-def builder_feeder(cfg) -> Feeder:
+def builder_feeder(cfg: Config) -> Feeder:
     net = pp.create_empty_network()
 
     #HV bus + external grid
@@ -48,26 +50,33 @@ def builder_feeder(cfg) -> Feeder:
 
     return Feeder(net=net, house_buses=house_buses, dist_m=dist_m)
 
-if __name__ == "__main__":
-    cfg = SimpleNamespace(feeder=SimpleNamespace(
-    source_vm_pu=1.03, lv_vn_kv=0.398, trafo_type="0.4 MVA 20/0.4 kV",
-    segment_length_m=20, backbone_length_m=400,
-    backbone_line_type="NAYY 4x150 SE",
-    n_houses=30, service_length_m=20, service_line_type="NAYY 4x50 SE",
-    ))
-
-    feeder = builder_feeder(cfg)
-    net = feeder.net
-    print(len(net.bus), len(net.line))
-    print(net.line.tail(5)[["from_bus", "to_bus", "length_km", "std_type"]])
-    print({b: feeder.dist_m[b] for b in feeder.house_buses[:5]})
-
-    pp.runpp(net)
-    print(net.res_bus.vm_pu.describe())
-
 
 def add_house_loads(feeder: Feeder, kw: float, pf: float) -> list[int]:
     """Create one load per house bus. Return the load indices.
     hint: pp.create_load(net, bus, p_mw=..., q_mvar=...)
     Use kw_to_mw and q_from_pf from constants. TODO"""
-    
+    net = feeder.net 
+    q_kvar = q_from_pf(kw, pf)
+
+    load_indices = []
+    for bus in feeder.house_buses:
+        idx = pp.create_load(net, bus = bus, 
+                            p_mw=kw_to_mw(kw),
+                            q_mvar=kw_to_mw(q_kvar),
+                            name=f"Load bus {bus}"
+                            )
+        load_indices.append(idx) 
+    return load_indices
+
+def add_solar(feeder: Feeder, buses: list[int], kw: float, kva: float) -> list[int]:
+    net = feeder.net
+    sgen_indices = []
+
+    for bus in buses:
+        idx = pp.create_sgen(net, bus=bus,
+                             p_mw=kw_to_mw(kw),
+                             q_mvar=0.0,
+                             sn_mva=kw_to_mw(kva),   # inverter rating: kVA → MVA, same /1000
+                             name=f"PV bus {bus}")
+        sgen_indices.append(idx) 
+    return sgen_indices
